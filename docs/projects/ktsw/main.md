@@ -45,12 +45,11 @@ El diseño sigue un modelo de capas estrictas de abstracción.
 graph TD
     subgraph Infrastructure [Capa de Infraestructura]
         Hypervisor[Proxmox VE]
-        Network[VLAN Segmentation]
-        Router[pfSense/OPNsense]
+        Router[OPNsense]
     end
 
     subgraph Orchestration [Capa de Orquestación]
-        K8s[Kubernetes Core]
+        K3s[Kubernetes Core K3s]
         Cilium[Cilium CNI + eBPF]
         MetalLB[MetalLB BGP]
     end
@@ -65,14 +64,13 @@ graph TD
     subgraph Observability [Capa de Observabilidad]
         Loki[Loki - Logs]
         Tempo[Tempo - Traces]
-        Vic[VictoriaMetrics - Metrics]
+        Prom[Prometheus - Metrics]
         Graf[Grafana - Visualization]
     end
 
     Infrastructure --> Orchestration
     Orchestration --> Platform
     Platform --> Observability
-
 ```
 
 ---
@@ -81,23 +79,14 @@ graph TD
 
 ### Capa 1: Infraestructura y Virtualización
 
-El control comienza en el "metal". Rechazamos instancias de nube pública para forzar el manejo de recursos físicos y redes L2/L3.
+El objetivo es aprender, yo creo que si sabes configurarlo a mano puedes dominarlo cuando es automático. Así que usé una instancia bare-metal para el manejo de recursos físicos y redes L2/L3.
 
 #### 1. Proxmox VE (Hypervisor)
 
 * **Justificación:** Permite la gestión de recursos a nivel de kernel (KVM/LXC) y la simulación de topologías de red complejas mediante Open vSwitch.
-* **Objetivo Técnico:** Comprender la diferencia entre aislamiento por virtualización completa y paravirtualización, así como la gestión de storage pools (ZFS).
+* **Objetivo Técnico:** Comprender la diferencia entre aislamiento por virtualización completa y paravirtualización.
 
-#### 2. Segmentación de Red (VLANs 802.1Q)
-
-La red no es plana. Separamos tráfico para simular un entorno de centro de datos real.
-
-* **VLAN 10 (Mgmt):** Plano de control, SSH, Proxmox UI.
-* **VLAN 20 (Nodes):** Tráfico de Kubelet, etcd y overlay network.
-* **VLAN 30 (Storage):** Tráfico dedicado iSCSI/NFS/Longhorn para evitar latencia en apps.
-* **VLAN 40 (Public):** VIPs expuestas por el LoadBalancer.
-
-#### 3. pfSense/OPNsense (Edge Router)
+#### 2. OPNsense (Edge Router)
 
 * **Justificación:** Actúa como gateway perimetral, gestionando VPNs (WireGuard), DNS Resolver (Unbound) y reglas de firewall stateful entre VLANs.
 
