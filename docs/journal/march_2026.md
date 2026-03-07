@@ -14,3 +14,94 @@ So, I've been working for some months now and there's always a lot of stuff goin
 Ah yea, I was talking about the job, I'm worried that now that I have less time I stop studying and working on my projects or just stop learning. One of my other worries is to not being able to actually rest, sometimes I get stuck in this loop in which I don't rest well because I don't feel like I "deserve" it, then I don't work well because I don't rest well, and, FOR ME, the ideal case would be to work hard and then fully rest, you know, have a nice balance.
 
 So, I did this, this is meant to be thingy in which I registry for myserf that I'm actually learning and moving constantly forward.
+
+## March 6
+
+Im working on Flux now, I need it as part of the KTSW project thingy so yea, flux cd. Apparently it uses kustomize no matter what becauese kustomize by it's own handles dependencies on the yamls so, yea, it doesn't do a dumb apply -f but uses a `kubectl kustomize` instead. I also _learned_ about kustomize for the "first" time. I was working on the company on a way to have traces without instrumentation, we tried [pixie](https://docs.px.dev/about-pixie/pixie-ebpf/) (and many other things such as [Odigos](https://odigos.io/)) but nothing quite clicked (probably [OBI](https://github.com/open-telemetry/opentelemetry-ebpf-instrumentation) will be the move but I'm waiting for the 1.x version) but the thing is that, when working on Pixie, we decided to dropped it because the installation was SUPER flimsy, a single restart and it was GONE, I tried to debug it reading the manifests and stumbled upon some "kustomization.yaml"s but I didn't quite have the time to deeply look into it.
+
+Turn out Kustomize is like an "easy" way to patch your deployments for different enviorments with the {{something.something}} hell of the template vars on Go, which is present on projects like, helm.
+
+The structure is kinda like this:
+
+```
+observability/
+├── grafana/
+│   ├── base/
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   ├── configmap-datasources.yaml
+│   │   ├── configmap-dashboards.yaml
+│   │   ├── rbac.yaml
+│   │   └── kustomization.yaml
+│   │
+│   └── overlays/
+│       ├── dev/
+│       │   ├── kustomization.yaml
+│       │   └── patch-replicas.yaml
+│       │
+│       └── prod/
+│           ├── kustomization.yaml
+│           ├── patch-resources.yaml
+│           └── ingress.yaml
+│
+├── loki/
+│   ├── base/
+│   │   ├── statefulset.yaml
+│   │   ├── service.yaml
+│   │   ├── configmap.yaml
+│   │   └── kustomization.yaml
+│   │
+│   └── overlays/
+│       ├── dev/
+│       │   ├── kustomization.yaml
+│       │   └── patch-storage.yaml
+│       │
+│       └── prod/
+│           ├── kustomization.yaml
+│           ├── patch-resources.yaml
+│           └── pvc.yaml
+│
+└── environments/
+    ├── dev/
+    │   └── kustomization.yaml
+    │
+    └── prod/
+        └── kustomization.yaml
+```
+
+And, inside `grafana/base/kustomization.yaml`:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - rbac.yaml
+  - configmap-datasources.yaml
+  - configmap-dashboards.yaml
+
+labels:
+  - pairs:
+      app: grafana
+```
+
+!!! note
+    The `pairs` thing is a way to declare a lablel to all the resources declared on the `kustomization.yaml` at the same time, in this case, `deployment.yaml`, `service.yaml`,...,`configmap-dashboards.yaml` will have the `app: grafana` label.
+
+Inside `loki/base/kustomization.yaml`:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - statefulset.yaml
+  - service.yaml
+  - configmap.yaml
+```
+
+But enough of kustomize. another important thing at least for me is the tokens, you IDEALLY SHOULD use a separte GitHub account with fine grained permissions which I will def. do (I wont) the bare minimum permissions for a classic token for flux is: `full repo scope` and MAYBE (if you're going to use it) `workflow`.
+
+Thats pretty much it for today, I did the [getting started from flux](https://fluxcd.io/flux/get-started/) and now I need to do homework so that's it for today.
