@@ -105,3 +105,7 @@ resources:
 But enough of kustomize. another important thing at least for me is the tokens, you IDEALLY SHOULD use a separte GitHub account with fine grained permissions which I will def. do (I wont) the bare minimum permissions for a classic token for flux is: `full repo scope` and MAYBE (if you're going to use it) `workflow`.
 
 Thats pretty much it for today, I did the [getting started from flux](https://fluxcd.io/flux/get-started/) and now I need to do homework so that's it for today.
+
+## March 7
+
+I honestly didn't do anything, it's saturday and I spent the majority of my day with my girlfriend, helping my mom and doing school homework, it was a very fun day and I actually got very distracted which as a great thing from time to time, I take it as a win.
