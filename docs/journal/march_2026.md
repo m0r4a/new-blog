@@ -13,7 +13,7 @@ So, I've been working for some months now and there's always a lot of stuff goin
 
 Ah yea, I was talking about the job, I'm worried that now that I have less time I stop studying and working on my projects or just stop learning. One of my other worries is to not being able to actually rest, sometimes I get stuck in this loop in which I don't rest well because I don't feel like I "deserve" it, then I don't work well because I don't rest well, and, FOR ME, the ideal case would be to work hard and then fully rest, you know, have a nice balance.
 
-So, I did this, this is meant to be thingy in which I registry for myserf that I'm actually learning and moving constantly forward.
+So, I did this, this is meant to be thingy in which I registry for myself that I'm actually learning and moving constantly forward.
 
 ## March 6
 
@@ -109,3 +109,13 @@ Thats pretty much it for today, I did the [getting started from flux](https://fl
 ## March 7
 
 I honestly didn't do anything, it's saturday and I spent the majority of my day with my girlfriend, helping my mom and doing school homework, it was a very fun day and I actually got very distracted which as a great thing from time to time, I take it as a win.
+
+## March 8
+
+I honestly spent like a billion hours sleeping and doing the _stoopid_ school homework. But still, I wanted to take a deeper look into Kustomize, for future reference, the official docs are [these ones](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/) and the video tutorial I watched was [this one](https://www.youtube.com/watch?v=5gsHYdiD6v8), once again, shout out to [That DevOps Guy](https://www.youtube.com/@MarcelDempers) his content is awesome.
+
+this is kinda cheating because is technically March 9 at 1 am but I will count it as March 8. I wrote [this README](https://github.com/m0r4a/k8s-misc/tree/main/concepts/kustomize/1.Whats%20that) in which I followed the tutorial instructions working around the deprecated stuff and also using Grafana instead of That DevOps Guy's exmple app.
+
+It went pretty smoothly to be honest, I already knew the key concepts and folder structure so it was pretty simple.
+
+So yea, first Kustomize file written.
