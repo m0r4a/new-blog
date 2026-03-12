@@ -119,3 +119,53 @@ this is kinda cheating because is technically March 9 at 1 am but I will count i
 It went pretty smoothly to be honest, I already knew the key concepts and folder structure so it was pretty simple.
 
 So yea, first Kustomize file written.
+
+## March 10
+
+I forgot to wite the journal xd. But I worked a lot this day, it was actually my first implementation of Flux CD in my k3s cluster, it was fun and a little tiny bit stressing. I kinda totally fully stole my `.yaml` from `March 8` so I didn't use time to learn how kustomize works. I updated many things, moved around the folder structure, apparently I'm using sort of a "standard" one which is great news for me, [THIS](https://github.com/m0r4a/flux_cd_testing) is the repo on which Im working on this, and yea, that's that, I had a ton of fun.
+
+## March 11
+
+This is technically from March 10 because I did it at like 2 am or smth but anyways, I struggled a lot on trynig to make it "public", everytime I work on a project I try to do it as if someone will use it or try to replicate it, idk why but Im programmed that way, when publishing it I was thinking how to make it easy to replicate. I had some iterations on this but it was too _dirty_, but I got quite happy with the final solution. The issue is this, the folder structure, in general is this one:
+
+├── apps
+│   ├── stuff
+├── clusters
+│   └── homelab
+│       ├── flux-system
+│       │   ├── gotk-components.yaml
+│       │   ├── gotk-sync.yaml
+│       │   └── kustomization.yaml
+│       ├── stuff
+
+And the contents of `gotk-sync.yaml` are this:
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  ref:
+    branch: main
+  secretRef:
+    name: flux-system
+  url: ssh://git@github.com/m0r4a/flux_cd_testing
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  path: ./clusters/homelab
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+```
+
+The issue is the `secretRef` part, even though I don't **expose** my secrets, when a user adds to it's flux a kustomization aiming at `clusters/homelab` flux will try to sync THAT part, trying to do an authenticated thingy with it, so it will constantly fail for them. As said, there's several iterations on how I thought about handling this which are not even worth mentioning lol, I ended up writing a pipeline that clones the whole repo, deletes the `flux-system` folder and pushes it into a `public` branch, and voilà, you now can aim at `./clusters/homelab` and clone everything in peace (just don't forget to use the public branch)
