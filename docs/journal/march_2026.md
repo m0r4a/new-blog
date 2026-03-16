@@ -169,3 +169,133 @@ spec:
 ```
 
 The issue is the `secretRef` part, even though I don't **expose** my secrets, when a user adds to it's flux a kustomization aiming at `clusters/homelab` flux will try to sync THAT part, trying to do an authenticated thingy with it, so it will constantly fail for them. As said, there's several iterations on how I thought about handling this which are not even worth mentioning lol, I ended up writing a pipeline that clones the whole repo, deletes the `flux-system` folder and pushes it into a `public` branch, and voilà, you now can aim at `./clusters/homelab` and clone everything in peace (just don't forget to use the public branch)
+
+## March 16
+
+Been a while, exams came and I also lead a rightsizing too which, isn't super complicated because it was never tought of in the company they were many low hanging candidates for it but I had to do a HUGE speadsheet with all k8s resources and that was hella time consuming even when I automated information gathering with Grafana dashboads, it's been a tough week.
+
+Anyways, today I'm continuing with Cilium's helm values, I'm using [THIS](https://www.youtube.com/watch?v=ni0Uw4WLHYo&t=1232s) video as reference for it. They explain like main concepts or configurations you might be interested in. All my notes on this are in my notes:
+
+### Cilium key HELM values
+
+- ipv4.enabled
+- ipv6.enabled
+
+Vey straight forward, the defualts are `true` for ipv4 and `false` for ipv6.
+
+---
+
+- debug.enabled
+
+Passes the --debug flag to variuos Cilium containers.
+  - cilium-envoy (if L7 enabled)
+  - clustermesh-apiserver (if clustermesh enabled)
+  - kvstoremesh (if clustermesh enabled)
+  - cilium-certgen (if clustermesh enabled)
+  - hubble-relay (if enabled)
+
+And, ofc, the default is `false`.
+
+---
+
+- devices
+
+Specify which network interfaces can run the eBPF datapath. This means that a packet sent from a pod to a distination outside the cluster will be masqueraded (to an output device IPv4 address), if the output device runs the program. When not specified, probing will automatically detect devices.
+
+You can put values lake "eth+", here to mean "all devices starting with `eth`"
+
+The default is `unset`.
+
+---
+
+- ipam.mode
+
+It's valid values are: `kubernetes`, `crd`, `eni`, `azure`, `cluster-pool`, `cluster-pool-v2beta`, `multi-pool`, `alibabacloud`, `delegated-plugin`. I found this information in [THIS][https://youtu.be/ni0Uw4WLHYo?list=TLPQMTYwMzIwMjYB07UMoyo3Zg&t=1309) video, but I could't find a modern reference in which all the possible values are listed.
+
+It's default is `cluster-pool`. More detais on [IPAM](#ipam)
+
+---
+
+- ipam.operator.clusterPoolIPv4PodCIDRList
+
+IPv4 CIDR list range to delegate to individual nodes for IPAM.
+
+It's default value is `["10.0.0.0/8"]`
+
+---
+
+- eni.enabled
+
+Enable `Elastic Network Interface (ENI)` integration. The default value is `false`. 
+
+### Notes on Cilium/Networking concepts
+
+#### IPAM
+
+Cilium is complicated, I mean, sure, you can just install it and never use hubble, ebpf, any type of policies and use it totally vanilla, but at that ponit just use the base kube-proxy if you don't plan on using any of the features. But anyways, the point is that concepts like VXLAN are foregin, I know VLANs bbut idk what's VXLAN so, yea, I will write down all the concept I find in this with my own words and my usecases.
+
+- IPAM (IP Address Management): in general, this is the thing that manages the IP Address assignment to the devices, in this case, to the PODs.
+
+- IPAM mode: this settings tells Cilium **where to find those IPs and who has the authority over them**, so, it tells Cilium how to interact with them and the infra around it to get valid IPs for the PODs.
+
+=== "cluster-pool"
+    ```md
+    This is ideally for bare metal, you give a huge block of IPs, `like 10.0.0.0/8` and Cilium fully manages it. He divides the `/8` into smaller CIDR (`/24` by default) and assigns a slice to each Node. Cilium reads which block corresponds to which node and starts giving away the IPs from there. When a pod borns in Node A, gives an IP from the block assigned to that node.
+
+    This makes a lot of sense now, when I install cilium I do it like this: `cilium install --version 1.19.0 --set ipam.operator.clusterPoolIPv4PodCIDRList=11.0.0.0/16`, I change the default 10.0.0.0 with 11, I remember that I struggle at first when installing cilium, didn't realize that the CIDR range clashed with my internal network behind my firewall clashed, so I used that flag, but didn't read about it thoroughly
+    ```
+
+=== "kubernetes"
+    ```md
+    In this mode, Cilium is more "passive" and gives the authority to Kubernetes itself (`kube-controller-manager`). Kubernetes is the one who assign the block of IPs (`PodCIDR`) to each Node. Cilium just reads the block of IPs assigned to each Node and gives the IPs away.
+    ```
+
+=== "Cloud native modes, (eni, azure, gke)"
+    ```md
+    If you are in the cloud, the things change. If you use `eni` in AWS, Cilium don't "create" the internal IPs, it uses directry the AWS API and ask for the real IPs on the AWS VPC.
+
+    Your pod gets a real cloud IP. Any other machine on that AWS VPC can communicate directly with the pod without the need NAT.
+    ```
+
+#### VXLAN (Virtual eXtensible Local Area Network),
+
+So, first, I need to understand which problem Kubernetes wants to solve. This is known as an **Overlay** network.
+
+**Real world vs Pods world**
+
+Imagine you're creating a cluster with some VMs running in an enviorment like Proxmox, you have two nodes:
+
+- Node A (Physical IP: `192.168.1.10`)
+- Node B (Physical IP: `192.168.1.11`)
+
+**Pod 1** (`10.0.1.5`) lives inside **Node A**, and **Pod 2** (`10.0.2.5`) lives inside **Node B**.
+
+If Pod 1 wants to talk with Pod 2, they send a packet. The problem is that **the physical router doesn't know who the network `10.0.x.x` is.**. Those IPs only exist in the Kubernetes context. If that packet goes to the physical network "raw", it will be dropped by the switch/router because the won't know how to route it.
+
+The solution for this is **VXLAN**. VXLAN is an **encapsulation** protocol. Basically, tricks the physical network hiding the traffic of the pods as regular traffic of the nodes.
+
+It works like a [Matryoshka](https://en.wikipedia.org/wiki/Matryoshka_doll).
+
+1. **Original packet**: Pod 1 creates the packet for Pod 2 (From `10.0.1.5` -> To: `10.0.2.5`)
+
+2. **New packet (VXLAN Encapsulation)**: Cilium catches the packet before goes out of the Node A to the physical network. Since Cilium knows that Pod 2 lives in Node B, takes the original kubernetes packet and puts it into a regular UDP packet.
+
+3. **The physical send**: Now, from the outside, the packet has the addresses of the physical Nodes (From `192.168.1.10` -> To: `192.168.1.11`)
+
+4. **The delivery**: Now the packet can happily travel through the physical switch, since it's normal traffic.
+
+5. **Decapsulation**: When the packet reaches the Node B, Cilium intercepts it, opens the "outer layer" (removes the VXLAN header), get's the original packet from Pod 1 and delivers it to Pod 2.
+
+###### Why is it called Virtual eXtensible LAN?
+
+Traditionally, to isolate L2 networks you used VLANs. But VLANs have a technical limit of 4,096 different networks, which, in modern data centers is not a lot. VXLAN uses a 24 bit identifier, which allows you to create 16 million virtual networks overlayed and isolated over the same physical infrastructure.
+
+##### VXLAN in Cilium
+
+When you install Cilium (or other CNI like Flannel or Calico), by default, it usually uses VXLAN to create that overlay network. It's the easiest way to make all the pods communicate no matter in which nodes they're in, that's because *doesn't need any configuration on the physical routers or switches**. It just works in any network that allows UDP traffic (Cilium uses port `8472` by default for this).
+
+##### The negative side of VXLAN
+
+Wrap a packet inside another packet adds around 50 bytes on each send (overhead), and it requires a litte bit of more effort from the CPU to encapsulate and decapsulate packets constantly.
+
+If you look for maximum performance in a bare-metar environment, and you want to avoid this "overhead", an alternative is using **Native Routing**, integrating protocols like **BGP**, in which you actually teach your physical routers how to reach the IPs of the pods.
