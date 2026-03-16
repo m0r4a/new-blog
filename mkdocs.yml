@@ -81,3 +81,4 @@ extra_javascript:
 plugins:
   - search
   - roamlinks
+  - tags
