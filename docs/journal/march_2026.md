@@ -228,7 +228,97 @@ It's default value is `["10.0.0.0/8"]`
 
 Enable `Elastic Network Interface (ENI)` integration. The default value is `false`. 
 
+---
+
+- bpf.lbExternalClusterIP
+
+Official description in the chart: Enable the use of per endpoint routes instead of routing vie the cilium_host interface
+
+By default in Cilium a clusterIP would be externally routable, like, if you sent a packet to a k8s node running cilium that had a ClusterIP service on it, by default, cilium would route it correctly, it would route it to the correct pod, so, in order to preserve the expected behavior to clusterIP there's a special flag in the service to indicate that the service is not externally routable and that flag gets passed down all the way out into the ebpf into the `nodeport_lb4` function.
+
+The default value is `false`.
+
+This can set up specific routes on the host for end points for specific interfaces, which is very useful for `eni` mode because this means you can avoid a hop going through the main network interface you can hop the network interface that you need internally on another node which is pretty good. For example, this means that if you have two pods in two nodes that need to talk to eachother if you are using `eni` what would **normally** happen is when this two nodes communicate to the node-to-node kind of internal with cilium and then it would have an extra hop to get to the container but if you have a direct interface available for the container which we do on `eni` mode you can have it hop directry there and bypass the whole iteration through the host networks stack.
+
+One side effect of this is that we then need to change where we do policy enforcement because if a packet can completely skip the hosts network stack and go straight into the container we need to do enforcement there.
+
+---
+
+- autoDirectNodeRoutes
+
+Description in the chart: Enable installation of PodCIDR routes between worker nodes if worker nodes share a commmon L2 network segment
+
+This will modify the route table of the host in order to for the IP Adress ranges for every node, because every node get assigned an IP Adress range for pods on that node (depends on the IPAM mode) but essentialy it does, and this will set up a route table in this nodes to populate it the pod IP Range for other nodes with the IP of that node, this means that when the linux kernel is routing a packet in the networking stack from a pod to a pod in another nodeit can send it directy to that node rather than kind of emit it to the networking infrastructure that exists between the nodes. Re-iterating, Cilium has two data-paths options, you have the **native** and the **tunneling**, when tunneling you have an overlay between all the nodes and native you don't, this is using native mode, not tunneling. The deamon errors if you enable this using tunneling mode.
+
+This ONLY works if all your nodes from your cluster are in the same L2 domain, if they are not, if there's a router or something between them then you're going to have to rely on that outline networking. You tipically see this in homelabs, or like "kind" clusters, or on-prem/bare-metal clusters or like a rack of servers. If you have a rack of servers that have an L2 switch between them this helps a lot because then you don't need somethig like an L3 switch or hop out to a router in order to get packages between different nodes.
+
+#### ebpf internals
+
+- bpf.mapDynamicSizeRatio
+
+You tell how much memory of the overall kind of memory of the memory budget of the application you want the ebpf maps to take up. This settings are the kind of settings that you would tune if you have like a really high throughput or you're winning in a really constrained environment and something like this and you want to be able like fine those ebpf maps. This is really good for helping with the startup time or like kind of "warming up" time.
+
+The default is `0.0025`.
+
+- bpf.preallocateMaps
+
+You can effectively trade longer startup time for better performance when dealing in traffic spikes. The way it does this is that there are, because, you know, cilium uses a whole bunch of ebpf maps. An ebpf map is effectively just the data structure in ebpf which shares data either between ebpf programs or between ebpf programs and user space programs like the agenr, so it's effectively storing data because ebpf programs don't run forever, they have a very limited shelf lik , like cilium ones will only run once per packet to do some processing effectively. This is how they store information between runs. Some of this maps kind of start empty and grow bigger as you add stuff, this onewill tell the kernel by passing the flag to just fully allocate them to begin with based on the expected size.
+
+#### Masquerade
+
+- enableIPv4Masquerade
+- enableIPv6Masquerade
+
+Official definition in the chart: Enables masquerading of IPvx traffic leaving the node from endpoints
+
+The idea here is that by default the pods will have IP addresses and the node will have an IP Address in the network and when you're emmiting packets out from your pod to something external, like a public accesible IP, another thing on the same private network, that isn't inside kubernetes, when you send a packet it has the source IP where it came from and the problem is that if your IP Addresses for your pods are not routable outside of the cluster (which is the usual case unless you're doing something like eni mode or something like that) then your not going to be able to get a response because the system you're talking to will try to respond to your pods private IP address which probably will not be able to route to and so it will just fail to get anywhere so, masquerade will change the source IP addres of the packet as is leaving the cluster to be the cluster's node IP address which is expected to be publicy routable in this case, and THEN when the node gets the response it can apply the reverse translation in order to send it to the correct place.
+
+It's default value is `true` for both.
+
+---
+
+egressMasqueradeInterfaces
+
+Official chart doc: Limit egress masquerading to interface seletctor.
+
+The default value is `unset`.
+
+An interesting thing is that there's two modes of this, one is iptables mode and one for pure ebpf mode, cilium by default uses iptables mode but you can customize the behavior. You can use an iptables command to see the iptables masquerade chain to see what is going to do. 
+
+Note: snat requires you to actually specify the source ip address that you're going to change it to whereas masquerade is by the interface so you basically anything that is going through that interface will be masqueraded to the IP address attached to the interface where the Source Natting is I can say anything going here except the source IP address. It's it's going to destination B then the source should be this and things like that.
+
+#### Monitor Aggregation
+
+- bpf.monitorAggregation
+
+Chart docs: Configure the level of aggregation for monitor notifications. `none`, `low`, `medium`, `maximum`. Default is `medium`.
+
+- bpf.monitorFlags
+
+Chart docs: Configure which TCP flags trigger notifications when see for the first time in a connection.
+
+This is how you set which flags you're interested in if you're doing the aggregation. There's effectively 8 tcp flags that you can set which specify certain things about the TCP connection stat, so there's normal wones like FIN, SYN, RST, PSH, ACK, or less common ones like URG, ECE, CWR. they all fit perfectly in one byte so you can do some fun bitwise or operations where you can do bit operations to figure out which flags are set.
+
+- bpf.monitorInterval
+
+Chart docs: Configure the typical time between monitor notifications for active connections
+
+This means that intervals with subsecond resolution are meaningless. Interestingly, `cast.ToDuration` presumes that you mean nanoseconds. So if you don't put the s at the end it will end up as zero seconds. You can give it a 0 or negative value and it's the same as turning off aggregation in both cases.
+
+`5s` it's the default value.
+
+
 ### Notes on Cilium/Networking concepts
+
+#### LPMTire
+
+- `BPF_MAP_TYPE_LPM_TRIE` introduced in Linux 4.11
+- LPM stands for "Longest Prefix Match"
+- A Tire is a kind of data structure, also known as prefix tree.
+- Intended to "[..]" match IP addresses to a stored set of prefixes
+- Designed for the CIDR membership use-case
+- Efficently finds the "longest prefix" match for items in the three
+  - If you put in 10.0.0.0/8 and 10.40.22.0/24, then searching for 10.40.22.12 would return 10.40.22.0/24 even though it matches both  
 
 #### IPAM
 
