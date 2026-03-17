@@ -8,7 +8,7 @@ tags:
   - helm
 version: v1.19.1
 ---
-# Quick Reference: Common Homelab Config
+# Helm Values Quick Reference: Common Homelab Config
 
 ```yaml
 ## Minimal opinionated homelab / k3s values
