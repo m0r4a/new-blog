@@ -183,9 +183,9 @@ Anyways, today I'm continuing with Cilium's helm values, I'm using [THIS](https:
 
 So, this are all the notes that born with the youtube video:
 
+- [Helm Values Reference (Youtube) - Cilium](https://blog.gmora.work/notes/technologies/k8s/cilium/Helm%20Values%20Reference%20(YouTube)%20-%20Cilium/)
 - [IPAM](https://blog.gmora.work/notes/technologies/k8s/cilium/IPAM%20Cilium/)
 - [VXLAN](https://blog.gmora.work/notes/technologies/k8s/cilium/VXLAN%20Cilium/)
-- [Helm Values Reference (Youtube) - Cilium](https://blog.gmora.work/notes/technologies/k8s/cilium/Helm%20Values%20Reference%20(YouTube)%20-%20Cilium/)
 
 And also, I passed the [official values.yaml](https://github.com/cilium/cilium/blob/main/install/kubernetes/cilium/values.yaml) to Claude and it generated this:
 
