@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "technologies/k8s/cilium/VXLAN Cilium.md",
+                "file": "technologies/k8s/cilium/Helm Values Quick Reference - Cilium.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "VXLAN Cilium"
+              "title": "Helm Values Quick Reference - Cilium"
             }
           }
         ]
@@ -182,12 +182,12 @@
   },
   "active": "a6c309d4ebf96b8a",
   "lastOpenFiles": [
-    "technologies/k8s/cilium/IPAM Cilium.md",
-    "technologies/k8s/cilium/Helm Values Reference YouTube.md",
-    "technologies/k8s/cilium/Helm Values Reference.md",
-    "technologies/k8s/cilium/Helm Values Quick Reference.md",
-    "concepts/LPM Trie.md",
+    "technologies/k8s/cilium/Helm Values Reference - CIlium.md",
+    "technologies/k8s/cilium/Helm Values Reference (YouTube) - Cilium.md",
+    "technologies/k8s/cilium/Helm Values Quick Reference - Cilium.md",
     "technologies/k8s/cilium/VXLAN Cilium.md",
+    "technologies/k8s/cilium/IPAM Cilium.md",
+    "concepts/LPM Trie.md",
     "technologies/k8s/cilium/Helm Values YouTube Video.md",
     "concepts/VXLAN.md",
     "concepts/IPAM.md",

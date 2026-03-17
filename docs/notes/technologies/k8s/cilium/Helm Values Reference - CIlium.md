@@ -7,7 +7,7 @@ tags:
   - AI-gen
 version: v1.19.1
 ---
-# Helm Values Reference
+# Helm Values Reference - Cilium
 
 
 > Source: [values.yaml](https://github.com/cilium/cilium/blob/main/install/kubernetes/cilium/values.yaml) (official Cilium chart) Sections ordered by operational importance.
