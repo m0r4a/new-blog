@@ -185,8 +185,9 @@ So, this are all the notes that born with the youtube video:
 
 - [IPAM](https://blog.gmora.work/notes/technologies/k8s/cilium/IPAM%20Cilium/)
 - [VXLAN](https://blog.gmora.work/notes/technologies/k8s/cilium/VXLAN%20Cilium/)
-- [Helm Values Reference Youtube](https://blog.gmora.work/notes/technologies/k8s/cilium/Helm%20Values%20Reference%20YouTube/)
+- [Helm Values Reference (Youtube) - Cilium](https://blog.gmora.work/notes/technologies/k8s/cilium/Helm%20Values%20Reference%20(YouTube)%20-%20Cilium/)
 
 And also, I passed the [official values.yaml](https://github.com/cilium/cilium/blob/main/install/kubernetes/cilium/values.yaml) to Claude and it generated this:
 
-- [Quick Refenence Cilium Values](
+- [Helm Values Quick Reference - Cilium](https://blog.gmora.work/notes/technologies/k8s/cilium/Helm%20Values%20Quick%20Reference%20-%20Cilium/)
+- [Helm Values Reference - Cilium](https://blog.gmora.work/notes/technologies/k8s/cilium/Helm%20Values%20Reference%20-%20CIlium/)
