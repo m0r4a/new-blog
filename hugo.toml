@@ -9,8 +9,8 @@ author = "Gael Mora Aguirre"
 mainSections = ["posts", "cheatsheets"]
 # Empty values are hidden.
 github = "https://github.com/m0r4a"
-linkedin = ""
-email = ""
+linkedin = "https://www.linkedin.com/in/moracodes/"
+email = "m0r4a@proton.me"
 
 [[menus.main]]
 name = "Posts"
