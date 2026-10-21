@@ -1,0 +1,13 @@
+<ul class="entries">
+  {{- range . }}
+  <li class="entry">
+    <h3 class="entry__title">
+      <a href="{{ .RelPermalink }}">{{ partial "title.html" . }}</a>
+    </h3>
+    {{ partial "meta.html" . }}
+    {{ with .Description | default .Summary | plainify | htmlUnescape }}
+      <p class="entry__summary">{{ . | strings.Truncate 180 }}</p>
+    {{ end }}
+  </li>
+  {{- end }}
+</ul>

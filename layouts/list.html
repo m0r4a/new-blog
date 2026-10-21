@@ -1,0 +1,19 @@
+{{ define "main" }}
+<div class="wrap">
+  <header class="page-head">
+    <h1 class="page-head__title">{{ if eq .Kind "term" }}#{{ .Data.Term }}{{ else }}{{ partial "title.html" . }}{{ end }}</h1>
+    {{ with .Content }}<div class="prose">{{ . }}</div>{{ end }}
+  </header>
+  {{ if eq .Kind "taxonomy" }}
+    <ul class="tag-cloud">
+      {{ range .Pages }}<li><a href="{{ .RelPermalink }}">#{{ .Data.Term }}</a> <span>{{ len .Pages }}</span></li>{{ end }}
+    </ul>
+  {{ else }}
+    {{ with .RegularPages }}
+      {{ partial "entries.html" . }}
+    {{ else }}
+      <p class="muted">Nothing here yet.</p>
+    {{ end }}
+  {{ end }}
+</div>
+{{ end }}

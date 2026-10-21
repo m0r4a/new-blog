@@ -1,0 +1,11 @@
+<footer class="foot">
+  <div class="foot__inner">
+    <nav class="foot__links" aria-label="Elsewhere">
+      {{ with site.Params.github }}<a href="{{ . }}" rel="me">GitHub</a>{{ end }}
+      {{ with site.Params.linkedin }}<a href="{{ . }}" rel="me">LinkedIn</a>{{ end }}
+      {{ with site.Params.email }}<a href="mailto:{{ . }}">Email</a>{{ end }}
+      {{ with site.Home.OutputFormats.Get "rss" }}<a href="{{ .RelPermalink }}">RSS</a>{{ end }}
+    </nav>
+    <p class="foot__copy">© {{ now.Year }} {{ site.Params.author }}</p>
+  </div>
+</footer>

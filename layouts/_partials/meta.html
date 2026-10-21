@@ -1,0 +1,13 @@
+<div class="meta">
+  <time class="meta__item" datetime="{{ .Date.Format "2006-01-02" }}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+    {{ .Date | time.Format ":date_medium" }}
+  </time>
+  <span class="meta__item">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    {{ .ReadingTime }} min read
+  </span>
+  {{- with .GetTerms "tags" }}
+  <span class="meta__tags">{{ range . }}<a class="tag" href="{{ .RelPermalink }}">#{{ .Data.Term }}</a>{{ end }}</span>
+  {{- end }}
+</div>

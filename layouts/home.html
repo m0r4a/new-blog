@@ -1,0 +1,32 @@
+{{ define "main" }}
+<div class="wrap">
+  <section class="intro">
+    {{ with resources.Get "images/avatar.png" }}
+      {{ $img := .Resize "240x webp q85" }}
+      <img class="intro__avatar" src="{{ $img.RelPermalink }}" width="120" height="120" alt="{{ site.Params.author }}">
+    {{ end }}
+    <div>
+      <h1 class="intro__name">{{ site.Params.author }}</h1>
+      {{ with .Params.topics }}
+      <ul class="intro__topics">{{ range . }}<li>{{ . }}</li>{{ end }}</ul>
+      {{ end }}
+    </div>
+  </section>
+  {{ with .Description }}<p class="intro__text">{{ . }}</p>{{ end }}
+
+  {{ $limit := 8 }}
+  {{ range site.Params.mainSections }}
+    {{ with site.GetPage . }}
+      {{ if .RegularPages }}
+      <section class="block">
+        <h2 class="block__title"><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+        {{ partial "entries.html" (first $limit .RegularPages) }}
+        {{ if gt (len .RegularPages) $limit }}
+          <a class="block__more" href="{{ .RelPermalink }}">See all →</a>
+        {{ end }}
+      </section>
+      {{ end }}
+    {{ end }}
+  {{ end }}
+</div>
+{{ end }}

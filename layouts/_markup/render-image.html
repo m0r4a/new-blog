@@ -1,0 +1,8 @@
+{{- $src := .Destination -}}
+{{- $img := "" -}}
+{{- if not (strings.HasPrefix $src "http") -}}
+  {{- $img = .Page.Resources.Get (strings.TrimPrefix "./" $src) -}}
+{{- end -}}
+<img src="{{ with $img }}{{ .RelPermalink }}{{ else }}{{ $src | safeURL }}{{ end }}" alt="{{ .PlainText }}"
+  {{- with $img }}{{ if in (slice "image/png" "image/jpeg" "image/webp" "image/gif") .MediaType.Type }} width="{{ .Width }}" height="{{ .Height }}"{{ end }}{{ end }}
+  {{- with .Title }} title="{{ . }}"{{ end }} loading="lazy">

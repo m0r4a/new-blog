@@ -1,0 +1,46 @@
+{{- /* [[Page]], [[Page|text]], [[Page#Heading]], ![[image.png]]. Skips <code>; unknown pages stay plain text. */ -}}
+{{- $page := . -}}
+{{- $out := "" -}}
+{{- range $i, $part := split .Content "<code" -}}
+  {{- if $i -}}
+    {{- $pieces := split $part "</code>" -}}
+    {{- $out = printf "%s<code%s</code>" $out (index $pieces 0) -}}
+    {{- $part = delimit (after 1 $pieces) "</code>" -}}
+  {{- end -}}
+  {{- $out = printf "%s%s" $out (partial "wikilinks-text" (dict "page" $page "html" $part)) -}}
+{{- end -}}
+{{- $out | safeHTML -}}
+
+{{- define "_partials/wikilinks-text" -}}
+{{- $page := .page -}}
+{{- $html := .html -}}
+{{- range findRESubmatch `(!?)\[\[([^\s\]|#<>][^\]|#<>]*?)(#[^\]|<>]*)?(?:\|([^\]<>]+))?\]\]` $html -}}
+  {{- $full := index . 0 -}}
+  {{- $target := index . 2 | strings.TrimSpace -}}
+  {{- $anchor := index . 3 -}}
+  {{- $label := index . 4 | default $target -}}
+  {{- $repl := $label -}}
+  {{- if eq (index . 1) "!" -}}
+    {{- $src := $target -}}
+    {{- with $page.Resources.GetMatch (printf "*%s" $target) -}}{{- $src = .RelPermalink -}}{{- end -}}
+    {{- $repl = printf `<img src="%s" alt="%s" loading="lazy">` $src (index . 4 | default "") -}}
+  {{- else -}}
+    {{- $found := site.GetPage $target -}}
+    {{- if not $found -}}
+      {{- $slug := $target | lower -}}
+      {{- range site.Pages -}}
+        {{- if and (not $found) .File -}}
+          {{- if or (eq (lower .File.ContentBaseName) $slug) (eq (lower .Title) $slug) -}}{{- $found = . -}}{{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- with $found -}}
+      {{- $hash := "" -}}
+      {{- with $anchor -}}{{- $hash = printf "#%s" (strings.TrimPrefix "#" . | anchorize) -}}{{- end -}}
+      {{- $repl = printf `<a href="%s%s">%s</a>` .RelPermalink $hash $label -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $html = replace $html $full $repl -}}
+{{- end -}}
+{{- return $html -}}
+{{- end -}}

@@ -1,0 +1,28 @@
+{{- /* > [!type] Title, > [!type]- Title (collapsed), > [!type]+ Title (collapsible, open) */ -}}
+{{- if eq .Type "alert" -}}
+  {{- $type := lower .AlertType -}}
+  {{- $groups := dict
+      "info" (slice "note" "info" "abstract" "summary" "tldr" "todo" "important")
+      "tip" (slice "tip" "hint" "success" "check" "done")
+      "warn" (slice "warning" "caution" "attention" "question" "help" "faq")
+      "danger" (slice "danger" "error" "failure" "fail" "missing" "bug")
+      "quote" (slice "quote" "cite" "example")
+  -}}
+  {{- $group := "info" -}}
+  {{- range $name, $members := $groups -}}{{- if in $members $type -}}{{- $group = $name -}}{{- end -}}{{- end -}}
+  {{- $names := dict "abstract" "Summary" "tldr" "TL;DR" "faq" "FAQ" -}}
+  {{- $title := .AlertTitle | default (index $names $type) | default ($type | humanize) -}}
+  {{- if .AlertSign -}}
+  <details class="callout callout--{{ $group }}"{{ if eq .AlertSign "+" }} open{{ end }}>
+    <summary class="callout__title">{{ $title }}</summary>
+    <div class="callout__body">{{ .Text }}</div>
+  </details>
+  {{- else -}}
+  <aside class="callout callout--{{ $group }}">
+    <p class="callout__title">{{ $title }}</p>
+    <div class="callout__body">{{ .Text }}</div>
+  </aside>
+  {{- end -}}
+{{- else -}}
+<blockquote>{{ .Text }}</blockquote>
+{{- end -}}

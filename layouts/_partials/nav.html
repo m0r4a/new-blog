@@ -1,0 +1,10 @@
+<header class="nav">
+  <div class="nav__inner">
+    <a class="nav__mark" href="{{ site.Home.RelPermalink }}"><span class="nav__prompt">~/</span>gmora</a>
+    <nav class="nav__links" aria-label="Main">
+      {{- range site.Menus.main }}
+      <a href="{{ .URL }}"{{ if or ($.IsMenuCurrent "main" .) ($.HasMenuCurrent "main" .) }} aria-current="page"{{ end }}>{{ .Name }}</a>
+      {{- end }}
+    </nav>
+  </div>
+</header>

@@ -1,0 +1,19 @@
+{{ define "main" }}
+{{ $toc := and (ne .Params.toc false) (gt .WordCount 400) (in .TableOfContents "<li>") }}
+<div class="progress" aria-hidden="true"></div>
+<article class="post{{ if $toc }} has-toc{{ end }}">
+  <header class="post__head">
+    <h1 class="post__title">{{ partial "title.html" . }}</h1>
+    {{ partial "meta.html" . }}
+  </header>
+  {{ if $toc }}
+  <nav class="toc" aria-label="On this page">
+    <p class="toc__title">On this page</p>
+    {{ .TableOfContents }}
+  </nav>
+  {{ end }}
+  <div class="prose">
+    {{ partial "wikilinks.html" . }}
+  </div>
+</article>
+{{ end }}
